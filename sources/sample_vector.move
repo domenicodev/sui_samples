@@ -12,7 +12,7 @@ Some relevant differences between Sui Move and Aptos Move that can be seen in th
 - to transfer, borrow, edit objects, the objects reference must be passed as a parameter to the functions
 */
 
-module sample_vector::sample_vector {
+module sample::sample_vector {
     use std::string::{Self, String};
 
     /// User struct represents individual user data

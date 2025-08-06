@@ -13,9 +13,9 @@ Useful differences between Sui Move and Aptos Move that can be seen in this modu
 */
 
 #[test_only]
-module sample_vector::sample_vector_tests;
+module sample::sample_vector_tests;
 
-use sample_vector::sample_vector;
+use sample::sample_vector;
 use std::string;
 use sui::test_scenario;
 
@@ -346,7 +346,7 @@ fun test_first_sui_package() {
     // pass
 }
 
-#[test, expected_failure(abort_code = ::sample_vector::sample_vector_tests::ENotImplemented)]
+#[test, expected_failure(abort_code = ::sample::sample_vector_tests::ENotImplemented)]
 fun test_first_sui_package_fail() {
     abort ENotImplemented
 }
