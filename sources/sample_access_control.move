@@ -5,7 +5,6 @@ Showcases how to implement a pseudo Access Control using objects (and not tables
 
 Ideally, for a production-ready Access Control Module, you should use a shared object tracking the roles of the users.
 
-IMPORTANT: As this is a very simple example(for demonstration purposes), we are not checking if the to address has no role, so it might be duplicated.
 */
 
 module sample::sample_access_control {
@@ -55,11 +54,11 @@ module sample::sample_access_control {
     // Change the super admin to the new super admin if the current user role is super admin.
     // We pass current_role as object since we need to delete it.
     // We use reference &current_role in has_role since we need to read it (mutable reference).
-    public entry fun change_super_admin(new_super_admin: address, current_role: SAC_ROLE, ctx: &mut TxContext) {
+    public entry fun change_super_admin(new_super_admin: address, current_role: &mut SAC_ROLE, ctx: &mut TxContext) {
         // check if the current role is super admin
-        assert!(has_role(&current_role, 2), 1);
+        assert!(has_role(current_role, 2), 1);
 
-        revoke_sac(current_role);
+        // revoke_sac(current_role);
         give_role(ctx, new_super_admin, 2);
     }
 
