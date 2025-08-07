@@ -58,8 +58,23 @@ module sample::sample_access_control {
     public entry fun change_super_admin(new_super_admin: address, current_role: SAC_ROLE, ctx: &mut TxContext) {
         // check if the current role is super admin
         assert!(has_role(&current_role, 2), 1);
+
         revoke_sac(current_role);
         give_role(ctx, new_super_admin, 2);
+    }
+
+    // Transfer the current user role to a new user and upgrade its role
+    // We pass current_role as mut because we have to transfer and edit it.
+    // We use reference &current_role in has_role since we need to read it (mutable reference).
+    public entry fun transfer_and_upgrade_role(new_user: address, mut current_role: SAC_ROLE, ctx: &mut TxContext) {
+        // check if the current role is super admin
+        assert!(has_role(&current_role, 2), 1);
+
+        // upgrade the role
+        current_role.level = current_role.level + 1;
+
+        // transfer the role to the new user
+        transfer::transfer(current_role, new_user);
     }
 
     // Allow user to renounce its own role (admin only, super admin can't be renounced its own role, should transfer it instead)

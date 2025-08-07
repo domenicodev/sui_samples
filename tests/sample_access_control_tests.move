@@ -139,6 +139,30 @@ module sample::sample_access_control_tests {
     }
 
     #[test]
+    fun test_transfer_and_upgrade_role() {
+        let mut scenario = test_scenario::begin(SUPER_ADMIN);
+        {
+            sample_access_control::init_for_testing(test_scenario::ctx(&mut scenario));
+        };
+        test_scenario::next_tx(&mut scenario, SUPER_ADMIN);
+        {
+            let role = test_scenario::take_from_sender<SAC_ROLE>(&scenario);
+            sample_access_control::transfer_and_upgrade_role(USER, role, test_scenario::ctx(&mut scenario));
+        };
+        test_scenario::next_tx(&mut scenario, USER);
+        {
+            let user_role = test_scenario::take_from_sender<SAC_ROLE>(&scenario);
+            assert!(sample_access_control::get_role_level(&user_role) == 3, 0); // Should be super admin level + 1
+            test_scenario::return_to_sender(&scenario, user_role);
+        };
+        test_scenario::next_tx(&mut scenario, SUPER_ADMIN);
+        {
+            assert!(!test_scenario::has_most_recent_for_sender<SAC_ROLE>(&scenario), 0);
+        };
+        test_scenario::end(scenario);
+    }
+
+    #[test]
     #[expected_failure(abort_code = 1)]
     fun test_renounce_super_admin_role_fails() {
         let mut scenario = test_scenario::begin(SUPER_ADMIN);
