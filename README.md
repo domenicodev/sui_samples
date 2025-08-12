@@ -44,14 +44,95 @@ fun my_function(ctx: &mut TxContext) {
 }
 ```
 
-### Object Abilities
+## 📋 Sui Move Object Abilities Reference Table
+
+| Capability | `key` | `store` | `copy` | `drop` | `key + store` | `key + drop` | `store + copy` | All Four |
+|------------|-------|---------|--------|--------|---------------|--------------|----------------|----------|
+| **Can be a top-level object** | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
+| **Can be stored inside other objects** | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| **Can be copied/duplicated** | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Auto-destroyed when unused** | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ |
+| **Can use `transfer::transfer()`** | ✅* | ❌ | ❌ | ❌ | ✅* | ✅* | ❌ | ✅* |
+| **Can use `transfer::public_transfer()`** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| **Can be transferred by external modules** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| **Must be explicitly handled** | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Can have global storage** | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
+| **Requires UID field** | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
+
+### Legend:
+- ✅ = Yes/Allowed
+- ❌ = No/Not Allowed  
+- \* = Only by the defining module
+
+### Individual Ability Breakdown:
+
+#### `key` Only
 ```move
-// Sui objects must have 'key' ability for unique identification
-public struct MyObject has key {
-    id: UID,  // Required for all Sui objects
-    data: String,
+public struct MyStruct has key {
+    id: UID,
+    // ... other fields
 }
 ```
+- **Can be stored as top-level object**: ✅ Yes
+- **Can be copied**: ❌ No (UID prevents copying)
+- **Storable in objects**: ❌ No
+- **Can be transferred by external modules**: ❌ No (only defining module)
+- **Can use public_transfer**: ❌ No
+- **Auto-destroyed**: ❌ No (must be explicitly handled)
+
+#### `store` Only
+```move
+public struct MyStruct has store {
+    // ... fields (no UID)
+}
+```
+- **Can be stored as top-level object**: ❌ No
+- **Can be copied**: ❌ No (unless all fields have copy)
+- **Storable in objects**: ✅ Yes
+- **Can be transferred by external modules**: ❌ No (not a top-level object)
+- **Can use public_transfer**: ❌ No (needs key)
+- **Auto-destroyed**: ❌ No (must be explicitly handled)
+
+#### `copy` Only
+```move
+public struct MyStruct has copy {
+    value: u64,  // All fields must have copy
+}
+```
+- **Can be stored as top-level object**: ❌ No
+- **Can be copied**: ✅ Yes
+- **Storable in objects**: ✅ Yes (copy implies store-like behavior)
+- **Can be transferred by external modules**: ❌ No (not a top-level object)
+- **Can use public_transfer**: ❌ No (needs key)
+- **Auto-destroyed**: ❌ No (unless also has drop)
+
+#### `drop` Only
+```move
+public struct MyStruct has drop {
+    // ... fields (all must have drop)
+}
+```
+- **Can be stored as top-level object**: ❌ No
+- **Can be copied**: ❌ No
+- **Storable in objects**: ✅ Yes (drop implies store-like behavior)
+- **Can be transferred by external modules**: ❌ No (not a top-level object)
+- **Can use public_transfer**: ❌ No (needs key)
+- **Auto-destroyed**: ✅ Yes
+
+#### `key + store` (Most Common for Transferable Objects)
+```move
+public struct MyStruct has key, store {
+    id: UID,
+    // ... other fields
+}
+```
+- **Can be stored as top-level object**: ✅ Yes
+- **Can be copied**: ❌ No (UID prevents copying)
+- **Storable in objects**: ✅ Yes
+- **Can be transferred by external modules**: ✅ Yes (via public_transfer)
+- **Can use public_transfer**: ✅ Yes
+- **Auto-destroyed**: ❌ No (must be explicitly handled)
+
 
 ### Object Access Patterns
 ```move

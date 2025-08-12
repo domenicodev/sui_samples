@@ -77,8 +77,9 @@ module sample::sample_access_control_tests {
         };
         test_scenario::next_tx(&mut scenario, SUPER_ADMIN);
         {
-            let role = test_scenario::take_from_sender<SAC_ROLE>(&scenario);
-            sample_access_control::change_super_admin(NEW_SUPER_ADMIN, role, test_scenario::ctx(&mut scenario));
+            let mut role = test_scenario::take_from_sender<SAC_ROLE>(&scenario);
+            sample_access_control::change_super_admin(NEW_SUPER_ADMIN, &mut role, test_scenario::ctx(&mut scenario));
+            test_scenario::return_to_sender(&scenario, role);
         };
         test_scenario::next_tx(&mut scenario, NEW_SUPER_ADMIN);
         {
@@ -106,8 +107,9 @@ module sample::sample_access_control_tests {
         test_scenario::next_tx(&mut scenario, ADMIN);
         {
             // Admin tries to change super admin - should fail
-            let admin_role = test_scenario::take_from_sender<SAC_ROLE>(&scenario);
-            sample_access_control::change_super_admin(USER, admin_role, test_scenario::ctx(&mut scenario));
+            let mut admin_role = test_scenario::take_from_sender<SAC_ROLE>(&scenario);
+            sample_access_control::change_super_admin(USER, &mut admin_role, test_scenario::ctx(&mut scenario));
+            test_scenario::return_to_sender(&scenario, admin_role);
         };
         test_scenario::end(scenario);
     }
