@@ -229,3 +229,190 @@ module sample::hot_potato_tests {
         abort ENotImplemented
     }
 }
+
+#[test_only]
+module sample::capability_pattern_tests {
+    use sample::capability_pattern;
+    use sui::test_scenario;
+
+    #[test]
+    fun test_basic_capability_pattern() {
+        let mut scenario = test_scenario::begin(@0x1);
+        
+        // Initialize the module (creates Counter and AdminCap for sender)
+        {
+            let ctx = test_scenario::ctx(&mut scenario);
+            capability_pattern::init_for_testing(ctx);
+        };
+        
+        // Admin can increment counter
+        test_scenario::next_tx(&mut scenario, @0x1);
+        {
+            let admin_cap = test_scenario::take_from_sender<capability_pattern::AdminCap>(&scenario);
+            let mut counter = test_scenario::take_shared<capability_pattern::Counter>(&scenario);
+            
+            // Initially counter should be 0
+            assert!(capability_pattern::get_value(&counter) == 0, 0);
+            
+            // Admin increments counter
+            capability_pattern::increment(&admin_cap, &mut counter);
+            assert!(capability_pattern::get_value(&counter) == 1, 1);
+            
+            // Admin sets counter value
+            capability_pattern::set_value(&admin_cap, &mut counter, 42);
+            assert!(capability_pattern::get_value(&counter) == 42, 2);
+            
+            test_scenario::return_to_sender(&scenario, admin_cap);
+            test_scenario::return_shared(counter);
+        };
+        
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    fun test_capability_transfer() {
+        let mut scenario = test_scenario::begin(@0x1);
+        
+        // Initialize with admin @0x1
+        {
+            let ctx = test_scenario::ctx(&mut scenario);
+            capability_pattern::init_for_testing(ctx);
+        };
+        
+        // Admin transfers capability to @0x2
+        test_scenario::next_tx(&mut scenario, @0x1);
+        {
+            let admin_cap = test_scenario::take_from_sender<capability_pattern::AdminCap>(&scenario);
+            
+            // Transfer admin capability to @0x2
+            transfer::public_transfer(admin_cap, @0x2);
+        };
+        
+        // @0x2 can now use the admin capability
+        test_scenario::next_tx(&mut scenario, @0x2);
+        {
+            let admin_cap = test_scenario::take_from_sender<capability_pattern::AdminCap>(&scenario);
+            let mut counter = test_scenario::take_shared<capability_pattern::Counter>(&scenario);
+            
+            // @0x2 can increment because they have the capability
+            capability_pattern::increment(&admin_cap, &mut counter);
+            assert!(capability_pattern::get_value(&counter) == 1, 0);
+            
+            test_scenario::return_to_sender(&scenario, admin_cap);
+            test_scenario::return_shared(counter);
+        };
+        
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    fun test_anyone_can_read() {
+        let mut scenario = test_scenario::begin(@0x1);
+        
+        // Initialize
+        {
+            let ctx = test_scenario::ctx(&mut scenario);
+            capability_pattern::init_for_testing(ctx);
+        };
+        
+        // Admin sets counter value
+        test_scenario::next_tx(&mut scenario, @0x1);
+        {
+            let admin_cap = test_scenario::take_from_sender<capability_pattern::AdminCap>(&scenario);
+            let mut counter = test_scenario::take_shared<capability_pattern::Counter>(&scenario);
+            
+            capability_pattern::set_value(&admin_cap, &mut counter, 100);
+            
+            test_scenario::return_to_sender(&scenario, admin_cap);
+            test_scenario::return_shared(counter);
+        };
+        
+        // Anyone (@0x2) can read the counter value
+        test_scenario::next_tx(&mut scenario, @0x2);
+        {
+            let counter = test_scenario::take_shared<capability_pattern::Counter>(&scenario);
+            
+            // @0x2 can read even without admin capability
+            assert!(capability_pattern::get_value(&counter) == 100, 0);
+            
+            test_scenario::return_shared(counter);
+        };
+        
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    fun test_mint_cap() {
+        let mut scenario = test_scenario::begin(@0x1);
+        
+        // Initialize
+        {
+            let ctx = test_scenario::ctx(&mut scenario);
+            capability_pattern::init_for_testing(ctx);
+        };
+        
+        // Admin mints new capability for @0x2
+        test_scenario::next_tx(&mut scenario, @0x1);
+        {
+            let admin_cap = test_scenario::take_from_sender<capability_pattern::AdminCap>(&scenario);
+            let ctx = test_scenario::ctx(&mut scenario);
+            
+            // Mint new admin capability for @0x2
+            capability_pattern::mint_cap(&admin_cap, @0x2, ctx);
+            
+            test_scenario::return_to_sender(&scenario, admin_cap);
+        };
+        
+        // @0x2 can now use their new admin capability
+        test_scenario::next_tx(&mut scenario, @0x2);
+        {
+            let admin_cap = test_scenario::take_from_sender<capability_pattern::AdminCap>(&scenario);
+            let mut counter = test_scenario::take_shared<capability_pattern::Counter>(&scenario);
+            
+            // @0x2 can increment because they have admin capability
+            capability_pattern::increment(&admin_cap, &mut counter);
+            assert!(capability_pattern::get_value(&counter) == 1, 0);
+            
+            test_scenario::return_to_sender(&scenario, admin_cap);
+            test_scenario::return_shared(counter);
+        };
+        
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    fun test_transfer_cap() {
+        let mut scenario = test_scenario::begin(@0x1);
+        
+        // Initialize
+        {
+            let ctx = test_scenario::ctx(&mut scenario);
+            capability_pattern::init_for_testing(ctx);
+        };
+        
+        // Admin transfers their capability to @0x2
+        test_scenario::next_tx(&mut scenario, @0x1);
+        {
+            let admin_cap = test_scenario::take_from_sender<capability_pattern::AdminCap>(&scenario);
+            
+            // Transfer admin capability to @0x2
+            capability_pattern::transfer_cap(admin_cap, @0x2);
+        };
+        
+        // @0x2 now has the admin capability
+        test_scenario::next_tx(&mut scenario, @0x2);
+        {
+            let admin_cap = test_scenario::take_from_sender<capability_pattern::AdminCap>(&scenario);
+            let mut counter = test_scenario::take_shared<capability_pattern::Counter>(&scenario);
+            
+            // @0x2 can use admin functions
+            capability_pattern::set_value(&admin_cap, &mut counter, 999);
+            assert!(capability_pattern::get_value(&counter) == 999, 0);
+            
+            test_scenario::return_to_sender(&scenario, admin_cap);
+            test_scenario::return_shared(counter);
+        };
+        
+        test_scenario::end(scenario);
+    }
+}
