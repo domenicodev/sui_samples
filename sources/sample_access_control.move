@@ -8,9 +8,6 @@ Ideally, for a production-ready Access Control Module, you should use a shared o
 */
 
 module sample::sample_access_control {
-    use sui::object::{Self, UID};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
 
     public struct SAC_ROLE has key {
         id: UID,
@@ -65,7 +62,7 @@ module sample::sample_access_control {
     // Transfer the current user role to a new user and upgrade its role
     // We pass current_role as mut because we have to transfer and edit it.
     // We use reference &current_role in has_role since we need to read it (mutable reference).
-    public entry fun transfer_and_upgrade_role(new_user: address, mut current_role: SAC_ROLE, ctx: &mut TxContext) {
+    public entry fun transfer_and_upgrade_role(new_user: address, mut current_role: SAC_ROLE) {
         // check if the current role is super admin
         assert!(has_role(&current_role, 2), 1);
 
@@ -77,7 +74,7 @@ module sample::sample_access_control {
     }
 
     // Allow user to renounce its own role (admin only, super admin can't be renounced its own role, should transfer it instead)
-    public entry fun renounce_role(current_role: SAC_ROLE, ctx: &mut TxContext) {
+    public entry fun renounce_role(current_role: SAC_ROLE) {
         // check if the current role is admin
         assert!(&current_role.level == 1, 1);
         revoke_sac(current_role);

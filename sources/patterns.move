@@ -6,9 +6,6 @@
 
 /// Hot potato pattern sample in Flash Loan scenario
 module sample::hot_potato {
-    use sui::object::{Self, UID};
-    use sui::tx_context::{Self, TxContext};
-    use sui::transfer;
 
     public struct Loan {
         value: u64
@@ -59,9 +56,6 @@ module sample::hot_potato {
 
 /// Capability pattern sample for simple access control
 module sample::capability_pattern {
-    use sui::object::{Self, UID};
-    use sui::tx_context::{Self, TxContext};
-    use sui::transfer;
 
     /// Admin capability - only holders can perform admin actions
     public struct AdminCap has key, store {
@@ -113,7 +107,7 @@ module sample::capability_pattern {
 
     /// Transfer admin capability to another address
     public fun transfer_cap(admin_cap: AdminCap, to: address) {
-        transfer::transfer(admin_cap, to);
+        transfer::public_transfer(admin_cap, to);
     }
 
     #[test_only]

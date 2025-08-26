@@ -1,22 +1,18 @@
-/**
- * Multihop file containing separate modules with recursive calling pattern
- * 
- * This is a very simple example on how to manipulate objects across multiple modules
- * and eventually transfer to another user. The flow is:
- * multihop -> set_name -> set_surname -> set_address -> transfer
- * 
- * Each module calls the next one in the chain, demonstrating cross-module communication
- * and object manipulation. The object gets modified at each step before being transferred
- * to the final recipient.
- *
- */
+//
+//  Multihop file containing separate modules with recursive calling pattern
+//  This is a very simple example on how to manipulate objects across multiple modules
+//  and eventually transfer to another user. The flow is:
+//  multihop -> set_name -> set_surname -> set_address -> transfer
+//  
+//  Each module calls the next one in the chain, demonstrating cross-module communication
+//  and object manipulation. The object gets modified at each step before being transferred
+//  to the final recipient.
+//
 
 // Types module, separated from the others (deployed under another address/package) for deeper complexity
 // Contains the MyObject struct and the functions to create and modify it
 module hop::types {
-    use sui::object::UID;
     use std::string::String;
-    use sui::transfer;
 
     /// MyObject represents an object that can be processed through multiple steps
     /// It contains personal information that can be updated through different modules

@@ -4,20 +4,19 @@ Shared object example(a Game) in Sui Move featuring RBAC to restrict access to e
 
 /// RBAC
 module sample::rbac_for_shared {
-
     /// Enum of Role Levels
     /// We explicitly use the abilities:
     /// - store: To store ROLE_LEVEL inside RBAC_ROLE
     /// - drop: To destroy this object(virtual) when used in functions that do not consume(transfer or destroy) the holding object(RBAC_ROLE)
     /// - copy: To use the object in memory for comparison(==, <=, ...)
-    public enum ROLE_LEVEL has store, drop, copy {
+    public enum ROLE_LEVEL has copy, drop, store {
         ADMIN,
-        SUPER_ADMIN
+        SUPER_ADMIN,
     }
 
     public struct RBAC_ROLE has key {
         id: sui::object::UID,
-        level: ROLE_LEVEL
+        level: ROLE_LEVEL,
     }
 
     fun init(ctx: &mut sui::tx_context::TxContext) {
@@ -41,7 +40,7 @@ module sample::rbac_for_shared {
     public fun mint_role_internal(to: address, role_level: ROLE_LEVEL, ctx: &mut TxContext) {
         let role = RBAC_ROLE {
             id: object::new(ctx),
-            level: role_level
+            level: role_level,
         };
         sui::transfer::transfer(role, to)
     }
@@ -56,23 +55,22 @@ module sample::rbac_for_shared {
 /// Shared Object (e.g. a Game)
 module sample::shared_object {
     use sample::rbac_for_shared;
-    use sui::tx_context::{Self, TxContext};
     use sui::table::{Self, Table};
 
-    public struct Player has store, copy {
+    public struct Player has copy, store {
         name: vector<u8>,
-        age: u16
+        age: u16,
     }
 
-    public struct Map has store, copy {
+    public struct Map has copy, store {
         name: vector<u8>,
-        size: u64
+        size: u64,
     }
 
-    public struct Weapon has store, copy {
+    public struct Weapon has copy, store {
         name: vector<u8>,
         trait1: u8,
-        trait2: u8
+        trait2: u8,
     }
 
     // Shared Object
@@ -80,15 +78,15 @@ module sample::shared_object {
         id: sui::object::UID,
         players: Table<address, Player>,
         maps: vector<Map>,
-        weapons: vector<Weapon>
+        weapons: vector<Weapon>,
     }
-    
+
     fun init(ctx: &mut TxContext) {
         let game = Game {
             id: object::new(ctx),
             players: table::new(ctx),
             maps: vector::empty(),
-            weapons: vector::empty()
+            weapons: vector::empty(),
         };
 
         sui::transfer::share_object(game);
@@ -99,26 +97,21 @@ module sample::shared_object {
         init(ctx)
     }
 
-    ////////////////////////////////////
-    ///
-    /// MUTATIONS / EDIT FUNCTIONS
-    ///
-    ////////////////////////////////////
+    /// === MUTATIONS / EDIT FUNCTIONS ===
 
     /// Add a new player to the game (RBAC admin only)
     public entry fun add_player(
         _: &rbac_for_shared::RBAC_ROLE,
-        game: &mut Game, 
+        game: &mut Game,
         player_address: address,
         name: vector<u8>,
         age: u16,
-        ctx: &mut TxContext
-    ) {        
+    ) {
         let player = Player {
             name,
-            age
+            age,
         };
-        
+
         table::add(&mut game.players, player_address, player);
     }
 
@@ -128,13 +121,12 @@ module sample::shared_object {
         game: &mut Game,
         name: vector<u8>,
         size: u64,
-        ctx: &mut TxContext
-    ) {        
+    ) {
         let map = Map {
             name,
-            size
+            size,
         };
-        
+
         vector::push_back(&mut game.maps, map);
     }
 
@@ -145,30 +137,21 @@ module sample::shared_object {
         name: vector<u8>,
         trait1: u8,
         trait2: u8,
-        ctx: &mut TxContext
-    ) {        
+    ) {
         let weapon = Weapon {
             name,
             trait1,
-            trait2
+            trait2,
         };
-        
+
         vector::push_back(&mut game.weapons, weapon);
     }
 
-    ////////////////////////////////////
-    ///
-    /// VIEW FUNCTIONS
-    ///
-    ////////////////////////////////////
-    
+    /// === VIEW FUNCTIONS ===
+
     /// Get game statistics (player count, map count, weapon count)
     public fun get_game_stats(game: &Game): (u64, u64, u64) {
-        (
-            table::length(&game.players),
-            vector::length(&game.maps),
-            vector::length(&game.weapons)
-        )
+        (table::length(&game.players), vector::length(&game.maps), vector::length(&game.weapons))
     }
 
     /// Get player details by address
@@ -188,5 +171,4 @@ module sample::shared_object {
         let weapon = vector::borrow(&game.weapons, weapon_id);
         (weapon.name, weapon.trait1, weapon.trait2)
     }
-
 }
