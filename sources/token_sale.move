@@ -16,7 +16,7 @@ module sample::atoken {
         sui_balance: Balance<SUI>
     }
 
-    public struct SaleBuyEvent has copy, drop, store {
+    public struct SaleBuyEvent has copy, drop {
         buyer: address,
         sui_spent: u64,
         tokens_bought: u64
