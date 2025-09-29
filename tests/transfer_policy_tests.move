@@ -15,6 +15,7 @@ module sample::transfer_policy_tests {
     use sui::sui::SUI;
     use sui::clock::{Self};
     use sui::transfer;
+    use std::option::{Self};
     use sample::transfer_policy_simple::{
         Self as tp,
         ExampleNFT,
@@ -539,6 +540,72 @@ module sample::transfer_policy_tests {
         tp::complete_transfer(&policy, request); // 💥 Should abort here
         
         // Clean up (won't reach here due to expected failure)
+        test::return_shared(policy);
+        test::return_to_sender(&scenario, cap);
+        test::end(scenario);
+    }
+
+    #[test]
+    /// Test withdrawing fees from transfer policy
+    fun test_withdraw_fees() {
+        let mut scenario = test::begin(ADMIN);
+        
+        // Initialize and set up policy with fee rule
+        tp::init_for_testing(test::ctx(&mut scenario));
+        test::next_tx(&mut scenario, ADMIN);
+        
+        let mut policy = test::take_shared<policy::TransferPolicy<ExampleNFT>>(&scenario);
+        let cap = test::take_from_sender<policy::TransferPolicyCap<ExampleNFT>>(&scenario);
+        
+        // Add fee rule (100 MIST)
+        tp::add_fee_rule(&mut policy, &cap, 100);
+        
+        // Make several fee payments to accumulate balance
+        let nft = tp::create_nft_for_testing(test::ctx(&mut scenario));
+        let item_id = object::id(&nft);
+        
+        // First payment
+        let payment1 = coin::mint_for_testing<SUI>(100, test::ctx(&mut scenario));
+        tp::transfer_with_fee<ExampleNFT>(
+            &mut policy, 
+            payment1, 
+            item_id, 
+            1000, 
+            object::id_from_address(@0x123)
+        );
+        
+        // Second payment
+        let payment2 = coin::mint_for_testing<SUI>(150, test::ctx(&mut scenario));
+        tp::transfer_with_fee<ExampleNFT>(
+            &mut policy, 
+            payment2, 
+            item_id, 
+            1000, 
+            object::id_from_address(@0x124)
+        );
+        
+        // Now withdraw partial amount (100 MIST)
+        let withdrawn_partial = tp::withdraw_fees<ExampleNFT>(
+            &mut policy, 
+            &cap, 
+            option::some(100), 
+            test::ctx(&mut scenario)
+        );
+        assert!(coin::value(&withdrawn_partial) == 100);
+        
+        // Withdraw remaining balance (all remaining funds)
+        let withdrawn_all = tp::withdraw_fees<ExampleNFT>(
+            &mut policy, 
+            &cap, 
+            option::none(), 
+            test::ctx(&mut scenario)
+        );
+        assert!(coin::value(&withdrawn_all) == 150); // 250 total - 100 already withdrawn
+        
+        // Clean up
+        coin::burn_for_testing(withdrawn_partial);
+        coin::burn_for_testing(withdrawn_all);
+        transfer::public_transfer(nft, ADMIN);
         test::return_shared(policy);
         test::return_to_sender(&scenario, cap);
         test::end(scenario);

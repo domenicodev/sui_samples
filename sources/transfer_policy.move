@@ -20,6 +20,7 @@ module sample::transfer_policy_simple {
     use sui::package::{Self};
     use sui::vec_set::{Self};
     use std::type_name::{Self};
+    use std::option::{Option};
     use sui::transfer_policy::{
         Self as policy,
         TransferPolicy,
@@ -125,6 +126,18 @@ module sample::transfer_policy_simple {
         // Add payment to policy balance and mark rule satisfied
         policy::add_to_balance(FeeRule {}, policy, payment);
         policy::add_receipt(FeeRule {}, request);
+    }
+
+    /// Withdraw accumulated fees from the policy
+    /// Only the policy owner (holder of TransferPolicyCap) can withdraw
+    /// If amount is None, withdraws all available balance
+    public fun withdraw_fees<T>(
+        policy: &mut TransferPolicy<T>,
+        cap: &TransferPolicyCap<T>,
+        amount: Option<u64>,
+        ctx: &mut TxContext
+    ): Coin<SUI> {
+        policy::withdraw(policy, cap, amount, ctx)
     }
 
     // ==================== RULE 3: TIME RULE ====================
