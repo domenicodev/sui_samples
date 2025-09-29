@@ -1,6 +1,6 @@
 module sample::display;
 
-use std::string::{Self, String};
+use std::string::String;
 use sui::display::{Self, Display};
 use sui::package;
 
@@ -40,7 +40,7 @@ public fun remove(self: &mut Display<Hero>, key: String) {
     display::remove(self, key);
 }
 
-public fun edit(self: &mut Display<Hero>, key: String, value: String) {
+public fun edit(self: &mut Display<Hero>, key: String, _value: String) {
     display::remove(self, key);
 }
 

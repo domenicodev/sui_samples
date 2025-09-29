@@ -18,9 +18,6 @@ module sample::transfer_policy_simple {
     use sui::sui::SUI;
     use sui::clock::{Self, Clock};
     use sui::package::{Self};
-    use sui::vec_set::{Self};
-    use std::type_name::{Self};
-    use std::option::{Option};
     use sui::transfer_policy::{
         Self as policy,
         TransferPolicy,
@@ -46,6 +43,7 @@ module sample::transfer_policy_simple {
     }
 
     /// Initialize the module - creates transfer policy and shares it
+    #[allow(lint(share_owned))]
     fun init(otw: TRANSFER_POLICY_SIMPLE, ctx: &mut TxContext) {
         // Create publisher capability
         let publisher = package::claim(otw, ctx);
@@ -134,7 +132,7 @@ module sample::transfer_policy_simple {
     public fun withdraw_fees<T>(
         policy: &mut TransferPolicy<T>,
         cap: &TransferPolicyCap<T>,
-        amount: Option<u64>,
+        amount: std::option::Option<u64>,
         ctx: &mut TxContext
     ): Coin<SUI> {
         policy::withdraw(policy, cap, amount, ctx)

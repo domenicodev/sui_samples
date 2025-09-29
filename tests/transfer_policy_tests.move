@@ -14,13 +14,10 @@ module sample::transfer_policy_tests {
     use sui::coin::{Self};
     use sui::sui::SUI;
     use sui::clock::{Self};
-    use sui::transfer;
-    use std::option::{Self};
     use sample::transfer_policy_simple::{
         Self as tp,
         ExampleNFT,
         AdminWitness,
-        UserWitness
     };
 
     // Test addresses
@@ -45,7 +42,7 @@ module sample::transfer_policy_tests {
         tp::destroy_user_witness_for_testing(user_witness);
         
         // Clean up NFT (transfer to sender since it wasn't taken from them)
-        transfer::public_transfer(nft, ADMIN);
+        sui::transfer::public_transfer(nft, ADMIN);
         test::end(scenario);
     }
 
@@ -217,7 +214,7 @@ module sample::transfer_policy_tests {
         );
         
         // Clean up
-        transfer::public_transfer(nft, ADMIN);
+        sui::transfer::public_transfer(nft, ADMIN);
         test::return_shared(policy);
         test::return_to_sender(&scenario, cap);
         test::end(scenario);
@@ -253,7 +250,7 @@ module sample::transfer_policy_tests {
         );
         
         // Clean up
-        transfer::public_transfer(nft, ADMIN);
+        sui::transfer::public_transfer(nft, ADMIN);
         test::return_shared(policy);
         test::return_to_sender(&scenario, cap);
         test::end(scenario);
@@ -292,7 +289,7 @@ module sample::transfer_policy_tests {
         );
         
         // Clean up
-        transfer::public_transfer(nft, ADMIN);
+        sui::transfer::public_transfer(nft, ADMIN);
         clock::destroy_for_testing(clock);
         test::return_shared(policy);
         test::return_to_sender(&scenario, cap);
@@ -337,7 +334,7 @@ module sample::transfer_policy_tests {
         );
         
         // Clean up
-        transfer::public_transfer(nft, ADMIN);
+        sui::transfer::public_transfer(nft, ADMIN);
         clock::destroy_for_testing(clock);
         test::return_shared(policy);
         test::return_to_sender(&scenario, cap);
@@ -588,7 +585,7 @@ module sample::transfer_policy_tests {
         let withdrawn_partial = tp::withdraw_fees<ExampleNFT>(
             &mut policy, 
             &cap, 
-            option::some(100), 
+            std::option::some(100), 
             test::ctx(&mut scenario)
         );
         assert!(coin::value(&withdrawn_partial) == 100);
@@ -597,7 +594,7 @@ module sample::transfer_policy_tests {
         let withdrawn_all = tp::withdraw_fees<ExampleNFT>(
             &mut policy, 
             &cap, 
-            option::none(), 
+            std::option::none(), 
             test::ctx(&mut scenario)
         );
         assert!(coin::value(&withdrawn_all) == 150); // 250 total - 100 already withdrawn
@@ -605,7 +602,7 @@ module sample::transfer_policy_tests {
         // Clean up
         coin::burn_for_testing(withdrawn_partial);
         coin::burn_for_testing(withdrawn_all);
-        transfer::public_transfer(nft, ADMIN);
+        sui::transfer::public_transfer(nft, ADMIN);
         test::return_shared(policy);
         test::return_to_sender(&scenario, cap);
         test::end(scenario);

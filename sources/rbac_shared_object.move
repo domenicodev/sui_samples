@@ -100,7 +100,7 @@ module sample::shared_object {
     /// === MUTATIONS / EDIT FUNCTIONS ===
 
     /// Add a new player to the game (RBAC admin only)
-    public entry fun add_player(
+    public fun add_player(
         _: &rbac_for_shared::RBAC_ROLE,
         game: &mut Game,
         player_address: address,
@@ -116,7 +116,7 @@ module sample::shared_object {
     }
 
     /// Add a new map to the game (RBAC admin only)
-    public entry fun add_map(
+    public fun add_map(
         _: &rbac_for_shared::RBAC_ROLE,
         game: &mut Game,
         name: vector<u8>,
@@ -131,7 +131,7 @@ module sample::shared_object {
     }
 
     /// Add a new weapon to the game (RBAC admin only)
-    public entry fun add_weapon(
+    public fun add_weapon(
         _: &rbac_for_shared::RBAC_ROLE,
         game: &mut Game,
         name: vector<u8>,

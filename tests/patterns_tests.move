@@ -126,7 +126,7 @@ module sample::hot_potato_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = 0)]
+    #[expected_failure(abort_code = 0, location = sample::hot_potato)]
     fun test_borrow_more_than_available() {
         let mut scenario = test_scenario::begin(@0x1);
         
@@ -154,7 +154,7 @@ module sample::hot_potato_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = 0)]
+    #[expected_failure(abort_code = 0, location = sample::hot_potato)]
     fun test_borrow_one_when_balance_zero() {
         let mut scenario = test_scenario::begin(@0x1);
         

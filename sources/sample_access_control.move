@@ -42,7 +42,7 @@ module sample::sample_access_control {
     }
 
     // Give the admin role to "to" address if the current user role is super admin, using reference as paramenter since we need a mutable(read) reference only
-    public entry fun give_admin_role(to: address, current_role: &SAC_ROLE, ctx: &mut TxContext) {
+    public fun give_admin_role(to: address, current_role: &SAC_ROLE, ctx: &mut TxContext) {
         // check if the current role is super admin
         assert!(has_role(current_role, 2), 1);
         give_role(ctx, to, 1);
@@ -51,7 +51,7 @@ module sample::sample_access_control {
     // Change the super admin to the new super admin if the current user role is super admin.
     // We pass current_role as object since we need to delete it.
     // We use reference &current_role in has_role since we need to read it (mutable reference).
-    public entry fun change_super_admin(new_super_admin: address, current_role: &mut SAC_ROLE, ctx: &mut TxContext) {
+    public fun change_super_admin(new_super_admin: address, current_role: &mut SAC_ROLE, ctx: &mut TxContext) {
         // check if the current role is super admin
         assert!(has_role(current_role, 2), 1);
 
@@ -62,7 +62,7 @@ module sample::sample_access_control {
     // Transfer the current user role to a new user and upgrade its role
     // We pass current_role as mut because we have to transfer and edit it.
     // We use reference &current_role in has_role since we need to read it (mutable reference).
-    public entry fun transfer_and_upgrade_role(new_user: address, mut current_role: SAC_ROLE) {
+    public fun transfer_and_upgrade_role(new_user: address, mut current_role: SAC_ROLE) {
         // check if the current role is super admin
         assert!(has_role(&current_role, 2), 1);
 
@@ -74,7 +74,7 @@ module sample::sample_access_control {
     }
 
     // Allow user to renounce its own role (admin only, super admin can't be renounced its own role, should transfer it instead)
-    public entry fun renounce_role(current_role: SAC_ROLE) {
+    public fun renounce_role(current_role: SAC_ROLE) {
         // check if the current role is admin
         assert!(&current_role.level == 1, 1);
         revoke_sac(current_role);
